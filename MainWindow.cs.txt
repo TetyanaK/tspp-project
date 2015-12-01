@@ -1,0 +1,220 @@
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.IO;
+using System.Windows.Forms;
+using System.Diagnostics;
+using System.Management;
+
+namespace Battery_Utility
+{
+    
+    public partial class Form1 : Form
+    {
+      
+      int targetBrightness;
+        PowerStatus power = SystemInformation.PowerStatus;
+        public Form1()
+        {
+            InitializeComponent();
+
+            trackBar1.Value = GetBrightness();
+            label3.Text = trackBar1.Value.ToString();
+
+            float secondsRemaining = power.BatteryLifePercent;
+            if (secondsRemaining >= 0)
+            {
+                ChargeRemaining.Text = (secondsRemaining * 100).ToString() + "% available.";
+            }
+            else
+            {
+                ChargeRemaining.Text = string.Empty;
+            }
+        }
+
+      private void RefreshStatus()
+        {
+            int powerPercent = (int)(power.BatteryLifePercent * 100);
+            if (powerPercent <= 100) BatteryIndicator.Value = powerPercent; else BatteryIndicator.Value = 0; switch (power.PowerLineStatus)
+            {
+                case PowerLineStatus.Online: pictureBox1.Image = Battery_Utility.Properties.Resources.charge ; groupBox1.Text = "Charging"; float secondsRemaining = power.BatteryLifePercent; if (secondsRemaining >= 0)
+                   {
+                       ChargeRemaining.Text = (secondsRemaining * 100).ToString() + "% available.";
+                    }
+                    else
+                   {
+                        ChargeRemaining.Text = string.Empty;
+                   }
+                   BatteryStatus.Text = power.BatteryChargeStatus.ToString();
+                   break;
+
+               case PowerLineStatus.Offline:
+
+                   pictureBox1.Image = Battery_Utility.Properties.Resources.full1;
+                  groupBox1.Text = "Battery Mode";
+                    BatteryStatus.Text = power.BatteryChargeStatus.ToString();
+                   break;
+
+                case PowerLineStatus.Unknown:
+
+                    break;
+            }
+        }
+
+        private void Form1_Load(object sender, EventArgs e)
+        {
+            RefreshStatus();
+            timer1.Enabled = true;
+            
+        }
+
+        private void groupBox1_Enter(object sender, EventArgs e)
+        {
+
+        }
+
+        private void pictureBox1_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void BatteryIndicator_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void BatteryStatus_TextChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void ChargeRemaining_TextChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void timer1_Tick(object sender, EventArgs e)
+        {
+            RefreshStatus();
+        }
+
+        private void label1_Click(object sender, EventArgs e)
+        {
+       
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            Process p = new Process();
+            p.StartInfo.UseShellExecute = false;
+            p.StartInfo.RedirectStandardOutput = true;
+            p.StartInfo.FileName = "powercfg";
+            p.StartInfo.Arguments = "-S 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c";// NO Power Saving
+            p.Start();
+
+            string output = p.StandardOutput.ReadToEnd();
+            p.WaitForExit();
+
+            trackBar1.Value = GetBrightness();
+            label3.Text = trackBar1.Value.ToString();
+          
+        }
+
+        static int GetBrightness()
+        {
+            //define scope (namespace)
+            System.Management.ManagementScope s = new System.Management.ManagementScope("root\\WMI");
+
+            //define query
+            System.Management.SelectQuery q = new System.Management.SelectQuery("WmiMonitorBrightness");
+
+            //output current brightness
+            System.Management.ManagementObjectSearcher mos = new System.Management.ManagementObjectSearcher(s, q);
+
+            System.Management.ManagementObjectCollection moc = mos.Get();
+
+            //store result
+            int curBrightness = 0;
+
+            foreach (System.Management.ManagementObject o in moc)
+            {
+                curBrightness = (byte)o.GetPropertyValue("CurrentBrightness");
+                break; //only work on the first object
+            }
+
+            moc.Dispose();
+            mos.Dispose();
+
+            return curBrightness;
+        }
+
+        static void SetBrightness(int targetBrightness)
+        {
+         
+            System.Management.ManagementScope s = new System.Management.ManagementScope("root\\WMI");
+
+            //define query
+            System.Management.SelectQuery q = new System.Management.SelectQuery("WmiMonitorBrightnessMethods");
+
+            //output current brightness
+            System.Management.ManagementObjectSearcher mos = new System.Management.ManagementObjectSearcher(s, q);
+
+            System.Management.ManagementObjectCollection moc = mos.Get();
+
+            foreach (System.Management.ManagementObject o in moc)
+            {
+                o.InvokeMethod("WmiSetBrightness", new Object[] { UInt32.MaxValue, targetBrightness }); //note the reversed order - won't work otherwise!
+                break; //only work on the first object
+            }
+
+            moc.Dispose();
+            mos.Dispose();
+        }
+    
+        private void trackBar1_Scroll(object sender, EventArgs e)
+        {
+           label3.Text = trackBar1.Value.ToString();
+           targetBrightness = trackBar1.Value;
+           SetBrightness(targetBrightness);
+           
+        }
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+            Process p = new Process();
+            p.StartInfo.UseShellExecute = false;
+            p.StartInfo.RedirectStandardOutput = true;
+            p.StartInfo.FileName = "powercfg";
+            p.StartInfo.Arguments = "-S 381b4222-f694-41f0-9685-ff5bb260df2e";//  Power Saving
+            p.Start();
+
+            string output = p.StandardOutput.ReadToEnd();
+            p.WaitForExit();
+
+
+            trackBar1.Value = GetBrightness();
+            label3.Text = trackBar1.Value.ToString();
+        }
+
+        private void button3_Click(object sender, EventArgs e)
+        {
+            Process p = new Process();
+            p.StartInfo.UseShellExecute = false;
+            p.StartInfo.RedirectStandardOutput = true;
+            p.StartInfo.FileName = "powercfg";
+            p.StartInfo.Arguments = "-S a1841308-3541-4fab-bc81-f71556f20b4a";//  Max Power Saving
+            p.Start();
+
+            string output = p.StandardOutput.ReadToEnd();
+            p.WaitForExit();
+
+
+            trackBar1.Value = GetBrightness();
+            label3.Text = trackBar1.Value.ToString();
+        }
+        
+    }
+}
+
