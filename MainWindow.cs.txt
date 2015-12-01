@@ -70,39 +70,9 @@ namespace Battery_Utility
             
         }
 
-        private void groupBox1_Enter(object sender, EventArgs e)
-        {
-
-        }
-
-        private void pictureBox1_Click(object sender, EventArgs e)
-        {
-
-        }
-
-        private void BatteryIndicator_Click(object sender, EventArgs e)
-        {
-
-        }
-
-        private void BatteryStatus_TextChanged(object sender, EventArgs e)
-        {
-
-        }
-
-        private void ChargeRemaining_TextChanged(object sender, EventArgs e)
-        {
-
-        }
-
         private void timer1_Tick(object sender, EventArgs e)
         {
             RefreshStatus();
-        }
-
-        private void label1_Click(object sender, EventArgs e)
-        {
-       
         }
 
         private void button1_Click(object sender, EventArgs e)
@@ -122,6 +92,7 @@ namespace Battery_Utility
           
         }
 
+        // get Brightness of PC
         static int GetBrightness()
         {
             //define scope (namespace)
@@ -181,6 +152,7 @@ namespace Battery_Utility
            
         }
 
+        // Start new process
         private void button2_Click(object sender, EventArgs e)
         {
             Process p = new Process();
